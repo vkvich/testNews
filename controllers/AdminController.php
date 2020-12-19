@@ -17,7 +17,7 @@ use app\models\PasswordResetRequestForm;
 use app\models\ResetPasswordForm;
 
 
-class SiteController extends Controller
+class AdminController extends Controller
 {
     public function actionCountry()
     {
