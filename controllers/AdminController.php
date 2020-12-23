@@ -1,88 +1,159 @@
 <?php
 
 namespace app\controllers;
-
-use app\models\Country;
+use app\models\UploadImage;
+use app\models\User;
 use app\models\Article;
 use Yii;
-use yii\data\Pagination;
-use yii\filters\AccessControl;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\SignupForm;
 use app\models\PasswordResetRequestForm;
 use app\models\ResetPasswordForm;
+use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
+use yii\web\UploadedFile;
 
 
 class AdminController extends Controller
 {
-    public function actionCountry()
+    /**
+     * @var null|User
+     */
+    private $_user = null;
+
+    /**
+     * @inheritdoc
+     * @return bool
+     * @throws \yii\web\BadRequestHttpException
+     */
+    public function beforeAction($action): bool
     {
-        $query = Country::find();
 
-        $pagination = new Pagination([
-            'defaultPageSize' => 5,
-            'totalCount' => $query->count(),
+        if (parent::beforeAction($action)) {
+            if (!\Yii::$app->user->can($action->id)) {
+                throw new ForbiddenHttpException('Access denied');
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    /**
+     * Просмотр конкретной статьи
+     * @return mixed
+     */
+    public function actionUpload(){
+        $model = new UploadImage();
+        if(Yii::$app->request->isPost){
+            $model->image = UploadedFile::getInstance($model, 'image');
+            $model->upload();
+            return $this->render('upload', ['model' => $model]);
+        }
+        return $this->render('upload', ['model' => $model]);
+    }
+
+
+    /**
+     * Просмотр конкретной статьи
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionView($id)
+    {
+        return $this->render('view', [
+            'model' => $this->findModel($id),
         ]);
+    }
 
-        $countries = $query->orderBy('name')
-            ->offset($pagination->offset)
-            ->limit($pagination->limit)
-            ->all();
+    /**
+     * Выбор статьи
+     * @return mixed
+     */
 
-        return $this->render('country', [
-            'countries' => $countries,
-            'pagination' => $pagination,
-        ]);
+    protected function findModel($id)
+    {
+        if (($model = Article::findOne($id)) !== null) {
+            return $model;
+        } else {
+            throw new NotFoundHttpException('Запрашиваемая страница не найдена.');
+        }
+    }
+
+    /**
+     * Создание новой статьм.
+     * Если удаление будет успешным, то пользователя перекинет на страницу (view).
+     * @return mixed
+     */
+
+
+    public function actionCreate()
+    {
+        $model = new Article();
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     public function actionArticle()
     {
-        $query = Article::find();
-
-        $pagination = new Pagination([
-            'defaultPageSize' => 5,
-            'totalCount' => $query->count(),
-        ]);
-
-        $articles = $query->orderBy('id')
-            ->offset($pagination->offset)
-            ->limit($pagination->limit)
-            ->all();
-
+        $searchModel = new Article();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         return $this->render('article', [
-            'articles' => $articles,
-            'pagination' => $pagination,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
         ]);
     }
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors()
+
+    public function actionUpdate($id)
     {
-        return [
-            'access' => [
-                'class' => AccessControl::className(),
-                'only' => ['logout'],
-                'rules' => [
-                    [
-                        'actions' => ['logout'],
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'logout' => ['post'],
-                ],
-            ],
-        ];
+        $model = $this->findModel($id);
+
+        if ($model->load(Yii::$app->request->post())) {
+
+            if ($model->save()) {
+                Yii::info("Статья ID: {$model->id} была изменена {$this->_user->username}");
+            } else {
+                Yii::error("Статья ID: {$model->id} НЕ была изменена {$this->_user->username}. Возможные ошибки модели: " . json_encode($model->errors));
+            }
+
+            return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
+
+    /**
+     * Удалить сстатью.
+     * Если удаление будет успешным, то пользователя перекинет на главную страницу (article).
+     * @param integer $id ID статьи.
+     * @return mixed
+     */
+    public function actionDelete($id)
+    {
+        $model = $this->findModel($id);
+
+        $modelId = $model->id;
+
+        if ($model->delete()) {
+            Yii::info("Статья ID: {$modelId} была удалена {$this->_user->username}");
+        } else {
+            Yii::error("Статья ID: {$modelId} НЕ была удалена {$this->_user->username}. Возможные ошибки модели: " . json_encode($model->errors));
+        }
+
+        return $this->redirect(['article']);
+    }
+
 
     /**
      * {@inheritdoc}

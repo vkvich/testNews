@@ -2,12 +2,13 @@
 
 namespace app\controllers;
 
-use app\models\Country;
 use app\models\Article;
 use Yii;
 use yii\data\Pagination;
 use yii\filters\AccessControl;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -19,43 +20,12 @@ use app\models\ResetPasswordForm;
 
 class SiteController extends Controller
 {
-    public function actionCountry()
+
+    public function actionArticle($id)
     {
-        $query = Country::find();
-
-        $pagination = new Pagination([
-            'defaultPageSize' => 5,
-            'totalCount' => $query->count(),
-        ]);
-
-        $countries = $query->orderBy('name')
-            ->offset($pagination->offset)
-            ->limit($pagination->limit)
-            ->all();
-
-        return $this->render('country', [
-            'countries' => $countries,
-            'pagination' => $pagination,
-        ]);
-    }
-
-    public function actionArticle()
-    {
-        $query = Article::find();
-
-        $pagination = new Pagination([
-            'defaultPageSize' => 5,
-            'totalCount' => $query->count(),
-        ]);
-
-        $articles = $query->orderBy('id')
-            ->offset($pagination->offset)
-            ->limit($pagination->limit)
-            ->all();
-
+        $model = $this -> findModel($id);
         return $this->render('article', [
-            'articles' => $articles,
-            'pagination' => $pagination,
+            'model' => $model,
         ]);
     }
     /**
@@ -99,7 +69,14 @@ class SiteController extends Controller
             ],
         ];
     }
-
+    protected function findModel($id)
+    {
+        if (($model = Article::findOne($id)) !== null) {
+            return $model;
+        } else {
+            throw new NotFoundHttpException('Запрашиваемая страница не найдена.');
+        }
+    }
     /**
      * Displays homepage.
      *
@@ -107,8 +84,23 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        $query = Article::find();
 
-        return $this->render('index');
+        $pagination = new Pagination([
+            'defaultPageSize' => 10,
+            'totalCount' => $query->count(),
+        ]);
+
+        $articles = $query->orderBy('id')
+            ->offset($pagination->offset)
+            ->limit($pagination->limit)
+            ->all();
+
+        return $this->render('index', [
+            'articles' => $articles,
+            'pagination' => $pagination,
+        ]);
+
 
     }
 

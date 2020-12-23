@@ -4,7 +4,8 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
-
+use yii\base\Model;
+use yii\data\ActiveDataProvider;
 /**
  * This is the model class for table "page".
  *
@@ -15,7 +16,10 @@ use yii\db\ActiveRecord;
  */
 class Article extends ActiveRecord
 {
-
+    public function scenarios()
+    {
+        return Model::scenarios();
+    }
     /**
      * {@inheritdoc}
      */
@@ -23,7 +27,28 @@ class Article extends ActiveRecord
     {
         return 'article';
     }
+    public function search($params)
+    {
+        $query = Article::find();
 
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            return $dataProvider;
+        }
+
+        $query->andFilterWhere([
+            'id' => $this->id
+        ]);
+
+        $query->andFilterWhere(['like', 'title', $this->title]);
+
+        return $dataProvider;
+    }
     /**
      * {@inheritdoc}
      */

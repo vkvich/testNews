@@ -1,15 +1,25 @@
 <?php
-use yii\helpers\Html;
-use yii\widgets\LinkPager;
+use yii\grid\GridView;
+use yii\widgets\Pjax;
+/* @var $this yii\web\View */
+/* @var $articles app\models\Article */
+/* @var $dataProvider yii\data\ActiveDataProvider */
 ?>
 <h1>Articles</h1>
-<ul>
-    <?php foreach ($articles as $article): ?>
-        <li>
-            <?= Html::encode("{$article->id} ({$article->title})") ?>:
-            <?= $article->text ?>
-        </li>
-    <?php endforeach; ?>
-</ul>
+<?php Pjax::begin(); ?>
+<?= GridView::widget([
+    'dataProvider' => $dataProvider,
+    'filterModel' => $searchModel,
+    'columns' => [
+        'id',
+        'image',
+        'title',
+        'text',
 
-<?= LinkPager::widget(['pagination' => $pagination]) ?>
+        ['class' => 'yii\grid\ActionColumn'],
+    ],
+]); ?>
+<?php Pjax::end(); ?>
+
+
+

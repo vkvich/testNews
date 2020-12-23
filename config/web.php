@@ -12,6 +12,9 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
     'components' => [
+        'authManager' => [
+            'class' => 'yii\rbac\PhpManager'
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'Iyo0e4MYX-h9tBdnmYxkdpQYW-7vGCXx',
@@ -50,9 +53,9 @@ $config = [
             'showScriptName' => false,
             'rules' => [
                 '' => 'site/index',
-                '<module:cabinet>/<controller:\w+>/<id:\d+>' => '<module>/<controller>/view',
-                '<module:cabinet>/<controller:\w+>/<action:\w+>/<id:\d+>' => '<module>/<controller>/<action>',
-                '<module:cabinet>/<controller:\w+>/<action:\w+>' => '<module>/<controller>/<action>',
+                'admin/' => 'admin/',
+                'admin/<action>' => 'admin/<action>',
+                '/<action>' => 'site/<action>',
             ],
         ],
 

@@ -13,7 +13,23 @@ body {
 .wrap > .container {
     padding: 70px 15px 20px;
 }
-
+.category-list{
+    margin: 0 -15px;
+}
+.category-list-item{
+    display: block;
+    float: left;
+    width: 25%;
+    padding: 0 15px;
+    margin-bottom: 30px;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+.cover{
+    display: block;
+    width: 100%;
+    padding-bottom: 56.25%;
+}
 .footer {
     height: 60px;
     background-color: #f5f5f5;

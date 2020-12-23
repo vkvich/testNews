@@ -1,0 +1,19 @@
+
+.category-list{
+    margin: 0 -15px;
+}
+.category-list-item{
+    display: block;
+    float: left;
+    width: 25%;
+    padding: 0 15px;
+    margin-bottom: 30px;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+.cover{
+    display: block;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background-color: #333;
+}
